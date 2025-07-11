@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] float walkSpeed = 4f;
+    [SerializeField] float sprintMultiplier = 2f;
     [SerializeField] float jumpForce = 3f;
     [SerializeField] float gravity = -9.81f;
 
@@ -13,6 +14,7 @@ public class PlayerMovement : MonoBehaviour
     PlayerControls controls;
     Vector2 moveInput;
     float yVel;
+    bool isSprinting;
 
     void Awake()
     {
@@ -21,6 +23,8 @@ public class PlayerMovement : MonoBehaviour
         controls.Gameplay.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
         controls.Gameplay.Move.canceled += _ => moveInput = Vector2.zero;
         controls.Gameplay.Jump.started += _ => TryJump();
+        controls.Gameplay.Sprint.started += _ => isSprinting = true; 
+        controls.Gameplay.Sprint.canceled += _ => isSprinting = false; 
     }
 
     void OnEnable() => controls.Gameplay.Enable();
@@ -33,7 +37,8 @@ public class PlayerMovement : MonoBehaviour
         Vector3 camR = Camera.main.transform.right; camR.y = 0;
         Vector3 move = (camF.normalized * moveInput.y + camR.normalized * moveInput.x).normalized;
 
-        cc.Move(move * walkSpeed * Time.deltaTime);
+        float speed = isSprinting ? walkSpeed * sprintMultiplier : walkSpeed;
+        cc.Move(move * speed * Time.deltaTime);
 
         //   2. Gravity & vertical motion
         yVel += gravity * Time.deltaTime;
